@@ -4,10 +4,13 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import type { Photo } from "@/lib/photos";
+import { getDict } from "@/lib/content";
+import type { Locale } from "@/lib/site";
 
 type Category = { id: string; label: string; intro: string; photos: Photo[] };
 
-export function PortfolioGallery({ categories }: { categories: Category[] }) {
+export function PortfolioGallery({ categories, locale }: { categories: Category[]; locale: Locale }) {
+  const t = getDict(locale).gallery;
   const [filter, setFilter] = useState<string>("all");
   const [index, setIndex] = useState<number | null>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -37,13 +40,13 @@ export function PortfolioGallery({ categories }: { categories: Category[] }) {
     return () => dialog.removeEventListener("close", onClose);
   }, []);
 
-  const filters = [{ id: "all", label: "All" }, ...categories.map((c) => ({ id: c.id, label: c.label }))];
+  const filters = [{ id: "all", label: t.all }, ...categories.map((c) => ({ id: c.id, label: c.label }))];
   const starts = visible.map((_, ci) => visible.slice(0, ci).reduce((n, c) => n + c.photos.length, 0));
 
   return (
     <>
       <div className="sticky top-0 z-30 -mx-5 border-b border-ink/10 bg-ivory/95 px-5 py-3 backdrop-blur sm:mx-0 sm:px-0">
-        <div role="group" aria-label="Filter photographs" className="flex flex-wrap gap-1">
+        <div role="group" aria-label={t.filter} className="flex flex-wrap gap-1">
           {filters.map((f) => (
             <button
               key={f.id}
@@ -60,7 +63,7 @@ export function PortfolioGallery({ categories }: { categories: Category[] }) {
         </div>
       </div>
       <p className="sr-only" aria-live="polite">
-        Showing {count} photographs{filter === "all" ? "" : ` in ${visible[0]?.label}`}.
+        {t.showing(count, filter === "all" ? undefined : visible[0]?.label)}
       </p>
 
       <div className="mt-12 space-y-20 lg:space-y-28">
@@ -82,7 +85,7 @@ export function PortfolioGallery({ categories }: { categories: Category[] }) {
                       onClick={(e) => open(i, e.currentTarget)}
                       className="group relative block w-full overflow-hidden bg-champagne"
                       style={{ aspectRatio: `${p.width} / ${p.height}` }}
-                      aria-label={`Open larger view: ${p.alt}`}
+                      aria-label={`${t.open}${p.alt}`}
                     >
                       <Image
                         src={p.src}
@@ -105,7 +108,7 @@ export function PortfolioGallery({ categories }: { categories: Category[] }) {
 
       <dialog
         ref={dialogRef}
-        aria-label="Photograph viewer"
+        aria-label={t.viewer}
         className="m-0 h-dvh max-h-none w-screen max-w-none bg-ivory p-0 text-ink backdrop:bg-ink/60"
         onKeyDown={(e) => {
           if (e.key === "ArrowRight") step(1);
@@ -126,7 +129,7 @@ export function PortfolioGallery({ categories }: { categories: Category[] }) {
                 onClick={close}
                 autoFocus
                 className="inline-flex h-11 w-11 items-center justify-center"
-                aria-label="Close viewer"
+                aria-label={t.close}
               >
                 <X aria-hidden="true" strokeWidth={1.25} />
               </button>
@@ -149,27 +152,27 @@ export function PortfolioGallery({ categories }: { categories: Category[] }) {
                 type="button"
                 onClick={() => step(-1)}
                 className="inline-flex h-11 w-11 items-center justify-center"
-                aria-label="Previous photograph"
+                aria-label={t.prev}
               >
                 <ChevronLeft aria-hidden="true" strokeWidth={1.25} />
               </button>
               <p className="max-w-2xl text-center text-sm text-ink-muted">
-                {current.alt}. Photo by{" "}
+                {current.alt}. {t.photoBy}{" "}
                 <a
-                  href={`https://unsplash.com/@${current.credit.username}?utm_source=elara_weddings&utm_medium=referral`}
+                  href={`https://unsplash.com/@${current.credit.username}?utm_source=melodye_huet_demo&utm_medium=referral`}
                   className="underline underline-offset-4"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
                   {current.credit.name}
                 </a>{" "}
-                on Unsplash
+                {t.onUnsplash}
               </p>
               <button
                 type="button"
                 onClick={() => step(1)}
                 className="inline-flex h-11 w-11 items-center justify-center"
-                aria-label="Next photograph"
+                aria-label={t.next}
               >
                 <ChevronRight aria-hidden="true" strokeWidth={1.25} />
               </button>

@@ -3,20 +3,55 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Menu, X } from "lucide-react";
-import { nav } from "@/lib/site";
+import { Menu, Phone, X } from "lucide-react";
+import { TextLogo } from "@/components/brand";
+import { getDict } from "@/lib/content";
+import { localePath, site, type Locale } from "@/lib/site";
 
-function Wordmark() {
+/** "/en/about/" → "/about" (path without locale prefix or trailing slash). */
+function basePath(pathname: string) {
+  const clean = pathname.replace(/\/+$/, "") || "/";
+  if (clean === "/en") return "/";
+  return clean.startsWith("/en/") ? clean.slice(3) : clean;
+}
+
+function LanguageSwitch({ locale, path, label }: { locale: Locale; path: string; label: string }) {
+  const options: { code: Locale; text: string; name: string }[] = [
+    { code: "fr", text: "FR", name: "Français" },
+    { code: "en", text: "EN", name: "English" },
+  ];
   return (
-    <Link href="/" className="group flex flex-col leading-none" aria-label="Elara Weddings, home">
-      <span className="font-display text-[1.75rem] font-light tracking-wide">Elara</span>
-      <span className="mt-0.5 text-[0.6rem] font-normal uppercase tracking-[0.42em] text-ink-muted">Weddings</span>
-    </Link>
+    <nav aria-label={label} className="flex items-center text-[0.8rem] font-normal tracking-[0.18em]">
+      {options.map((o, i) => (
+        <span key={o.code} className="flex items-center">
+          {i > 0 && (
+            <span aria-hidden="true" className="px-1 text-ink/30">
+              |
+            </span>
+          )}
+          {/* Plain links: each language has its own root layout, so switching is a full page load anyway */}
+          <a
+            href={localePath(o.code, path)}
+            hrefLang={o.code}
+            lang={o.code}
+            aria-label={o.name}
+            aria-current={o.code === locale ? "true" : undefined}
+            className={`inline-flex min-h-11 min-w-9 items-center justify-center ${
+              o.code === locale ? "text-ink underline decoration-rose underline-offset-[0.5em]" : "text-ink-muted hover:text-ink"
+            }`}
+          >
+            {o.text}
+          </a>
+        </span>
+      ))}
+    </nav>
   );
 }
 
-export function SiteHeader() {
+export function SiteHeader({ locale }: { locale: Locale }) {
+  const t = getDict(locale).common;
   const pathname = usePathname();
+  const path = basePath(pathname);
   const [open, setOpen] = useState(false);
   const toggleRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -45,24 +80,24 @@ export function SiteHeader() {
     };
   }, [open]);
 
-  const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
+  const isActive = (href: string) => (href === "/" ? path === "/" : path.startsWith(href));
 
   return (
     <header className="relative z-40 border-b border-ink/10 bg-ivory">
-      <div className="mx-auto flex h-20 w-full max-w-[1280px] items-center justify-between px-5 sm:px-8 lg:px-12">
-        <Wordmark />
+      <div className="mx-auto flex h-20 w-full max-w-[1280px] items-center justify-between gap-4 px-5 sm:px-8 lg:px-12">
+        <Link href={localePath(locale, "/")} aria-label={t.logoHome} className="shrink-0">
+          <TextLogo />
+        </Link>
 
-        <nav aria-label="Main" className="hidden lg:block">
-          <ul className="flex items-center gap-9">
-            {nav.map((item) => (
+        <nav aria-label={t.navMain} className="hidden lg:block">
+          <ul className="flex items-center gap-7 xl:gap-9">
+            {t.nav.map((item) => (
               <li key={item.href}>
                 <Link
-                  href={item.href}
+                  href={localePath(locale, item.href)}
                   aria-current={isActive(item.href) ? "page" : undefined}
                   className={`text-[0.8rem] font-normal uppercase tracking-[0.18em] underline-offset-[0.6em] transition-colors hover:text-ink ${
-                    isActive(item.href)
-                      ? "text-ink underline decoration-rose decoration-1"
-                      : "text-ink-muted"
+                    isActive(item.href) ? "text-ink underline decoration-rose decoration-1" : "text-ink-muted"
                   }`}
                 >
                   {item.label}
@@ -72,38 +107,42 @@ export function SiteHeader() {
           </ul>
         </nav>
 
-        <Link
-          href="/contact"
-          className="hidden min-h-11 items-center bg-ink px-5 text-[0.75rem] font-normal uppercase tracking-[0.18em] text-ivory transition-colors hover:bg-[#4a3830] lg:inline-flex"
-        >
-          Check availability
-        </Link>
-
-        <button
-          ref={toggleRef}
-          type="button"
-          className="-mr-2 inline-flex h-11 w-11 items-center justify-center lg:hidden"
-          aria-expanded={open}
-          aria-controls="mobile-menu"
-          aria-label={open ? "Close menu" : "Open menu"}
-          onClick={() => setOpen((v) => !v)}
-        >
-          {open ? <X aria-hidden="true" strokeWidth={1.25} /> : <Menu aria-hidden="true" strokeWidth={1.25} />}
-        </button>
+        <div className="flex items-center gap-3 lg:gap-5">
+          <LanguageSwitch locale={locale} path={path} label={t.language} />
+          <a
+            href={site.phone.href}
+            aria-label={t.callLabel}
+            className="hidden min-h-11 items-center gap-2 bg-ink px-5 text-[0.75rem] font-normal tracking-[0.12em] text-ivory transition-colors hover:bg-[#4a3830] lg:inline-flex"
+          >
+            <Phone aria-hidden="true" className="h-4 w-4" strokeWidth={1.25} />
+            {site.phone.display}
+          </a>
+          <button
+            ref={toggleRef}
+            type="button"
+            className="-mr-2 inline-flex h-11 w-11 items-center justify-center lg:hidden"
+            aria-expanded={open}
+            aria-controls="mobile-menu"
+            aria-label={open ? t.closeMenu : t.openMenu}
+            onClick={() => setOpen((v) => !v)}
+          >
+            {open ? <X aria-hidden="true" strokeWidth={1.25} /> : <Menu aria-hidden="true" strokeWidth={1.25} />}
+          </button>
+        </div>
       </div>
 
       <div
         id="mobile-menu"
         ref={panelRef}
         hidden={!open}
-        className="fixed inset-x-0 bottom-0 top-20 overflow-y-auto bg-ivory lg:hidden"
+        className="fixed inset-x-0 bottom-0 top-[7.25rem] overflow-y-auto bg-ivory lg:hidden"
       >
-        <nav aria-label="Mobile" className="px-5 pb-12 pt-8 sm:px-8">
+        <nav aria-label={t.navMobile} className="px-5 pb-12 pt-8 sm:px-8">
           <ul className="flex flex-col">
-            {nav.map((item) => (
+            {t.nav.map((item) => (
               <li key={item.href} className="border-b border-ink/10">
                 <Link
-                  href={item.href}
+                  href={localePath(locale, item.href)}
                   aria-current={isActive(item.href) ? "page" : undefined}
                   className="flex min-h-16 items-center justify-between font-display text-4xl font-light"
                 >
@@ -113,12 +152,13 @@ export function SiteHeader() {
               </li>
             ))}
           </ul>
-          <Link
-            href="/contact"
-            className="mt-10 inline-flex min-h-12 w-full items-center justify-center bg-ink px-7 text-[0.8rem] font-normal uppercase tracking-[0.18em] text-ivory"
+          <a
+            href={site.phone.href}
+            className="mt-10 inline-flex min-h-12 w-full items-center justify-center gap-2 bg-ink px-7 text-[0.8rem] font-normal uppercase tracking-[0.18em] text-ivory"
           >
-            Check availability
-          </Link>
+            <Phone aria-hidden="true" className="h-4 w-4" strokeWidth={1.25} />
+            {t.callLabel}
+          </a>
         </nav>
       </div>
     </header>

@@ -1,26 +1,33 @@
+// Real, public facts about the business (verified 6 Nov 2026, see the real-business prompt).
+// Nothing here is invented: no email, prices, team or awards are public, so none are listed.
+export type Locale = "fr" | "en";
+
 export const site = {
-  name: "Elara Weddings",
-  tagline: "Timeless wedding stories, captured with elegance",
-  description:
-    "Elara Weddings is a fictional wedding photography studio in York creating elegant, romantic and timeless wedding stories.",
+  name: "Mélodye Huet – Photographe",
+  shortName: "Mélodye Huet",
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://elara-weddings.ammar-rajabi.com",
-  phone: { display: "01904 555 118", href: "tel:+441904555118" },
-  email: "hello@elaraweddings.co.uk",
+  phone: { display: "06 18 92 22 39", href: "tel:+33618922239" },
   address: {
-    street: "31 Rose Lane",
-    city: "York",
-    postcode: "YO1 7PX",
-    country: "United Kingdom",
+    street: "89 route des Potiers",
+    postcode: "14490",
+    city: "Noron-la-Poterie",
+    area: "Calvados (14)",
+    country: "France",
   },
+  mapsUrl: "https://maps.google.com/?cid=16429266821692733434",
+  directionsUrl:
+    "https://www.google.com/maps/dir/?api=1&destination=89+route+des+Potiers%2C+14490+Noron-la-Poterie",
+  facebookUrl: "https://www.facebook.com/profile.php?id=100067907715999",
+  /** Her own Facebook bio, quoted as written. */
+  bio: "votre photographe personnalisé dans le 14",
+  rating: { value: 4.9, count: 91 },
 } as const;
 
-export const nav = [
-  { href: "/", label: "Home" },
-  { href: "/about", label: "About" },
-  { href: "/portfolio", label: "Portfolio" },
-  { href: "/packages", label: "Packages" },
-  { href: "/contact", label: "Contact" },
-] as const;
+/** Prefix a site path with the locale ("/about" → "/en/about"). French is the default, unprefixed. */
+export function localePath(locale: Locale, path: string) {
+  if (locale === "fr") return path;
+  return path === "/" ? "/en" : `/en${path}`;
+}
 
 /** Shared Open Graph image (hero photo cropped to 1200×630 by Unsplash's CDN). */
 export const ogImage = {
@@ -31,13 +38,13 @@ export const ogImage = {
 };
 
 /** Page-level Open Graph that keeps the shared image (Next replaces, not merges, nested openGraph). */
-export function pageOpenGraph(title: string, path: string) {
+export function pageOpenGraph(title: string, path: string, locale: Locale = "fr") {
   return {
     type: "website" as const,
-    locale: "en_GB",
+    locale: locale === "fr" ? "fr_FR" : "en_GB",
     siteName: site.name,
     title,
-    url: path,
+    url: localePath(locale, path),
     images: [ogImage],
   };
 }

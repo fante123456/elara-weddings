@@ -18,6 +18,32 @@ export function ButtonLink({ variant = "solid", className = "", ...props }: Butt
   return <Link {...props} className={`${base} ${styles} ${className}`} />;
 }
 
+/** Same look as ButtonLink, for tel: and external links (no client-side routing). */
+export function ButtonAnchor({
+  variant = "solid",
+  className = "",
+  ...props
+}: ComponentProps<"a"> & { variant?: "solid" | "ghost" }) {
+  const base =
+    "inline-flex min-h-12 items-center justify-center gap-2 px-7 text-[0.8rem] font-normal uppercase tracking-[0.18em] transition-colors duration-300";
+  const styles =
+    variant === "solid"
+      ? "bg-ink text-ivory hover:bg-[#4a3830]"
+      : "border border-ink/30 text-ink hover:border-ink hover:bg-ink/[0.03]";
+  return <a {...props} className={`${base} ${styles} ${className}`} />;
+}
+
+/** Renders a [before, emphasis, after] title. */
+export function RichText({ t, emClassName = "" }: { t: readonly [string, string, string?]; emClassName?: string }) {
+  return (
+    <>
+      {t[0]}
+      <em className={emClassName}>{t[1]}</em>
+      {t[2] ?? ""}
+    </>
+  );
+}
+
 export function Eyebrow({ children, className = "" }: { children: ReactNode; className?: string }) {
   return <p className={`eyebrow ${className}`}>{children}</p>;
 }

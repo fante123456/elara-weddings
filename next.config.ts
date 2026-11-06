@@ -5,6 +5,8 @@ const staticExport = process.env.STATIC_EXPORT === "1";
 
 const nextConfig: NextConfig = {
   ...(staticExport ? { output: "export" as const, trailingSlash: true } : {}),
+  // French and English each have their own root layout, so the 404 page is global
+  experimental: { globalNotFound: true },
   images: {
     // Images are resized by Unsplash's CDN (see lib/unsplash-loader.ts)
     loader: "custom",
